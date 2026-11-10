@@ -1,0 +1,60 @@
+@import "tailwindcss";
+
+:root {
+  --background: #F4EFEA;
+  --foreground: #18181B;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+/* Lisso warm styling */
+.lisso-card {
+  background-color: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 0 10px 30px -5px rgba(50, 40, 30, 0.05), 0 4px 12px -2px rgba(50, 40, 30, 0.03);
+}
+
+.lisso-pill {
+  border-radius: 9999px;
+  transition: all 0.2s ease;
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.12);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.25);
+}
+
+/* Audio waveform animation simulation */
+@keyframes wave {
+  0%, 100% { height: 6px; }
+  50% { height: 26px; }
+}
+
+.animate-wave-1 { animation: wave 1.2s ease-in-out infinite; }
+.animate-wave-2 { animation: wave 0.9s ease-in-out 0.2s infinite; }
+.animate-wave-3 { animation: wave 1.4s ease-in-out 0.4s infinite; }
+.animate-wave-4 { animation: wave 1.0s ease-in-out 0.1s infinite; }
+.animate-wave-5 { animation: wave 1.3s ease-in-out 0.3s infinite; }
+.animate-wave-6 { animation: wave 0.8s ease-in-out 0.5s infinite; }
+.animate-wave-7 { animation: wave 1.1s ease-in-out 0.2s infinite; }
+.animate-wave-8 { animation: wave 1.5s ease-in-out 0.4s infinite; }
