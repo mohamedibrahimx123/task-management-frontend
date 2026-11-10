@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
+import { ThemeLanguageProvider } from "@/context/ThemeLanguageContext";
 
 export const metadata: Metadata = {
   title: "Lisso — Task Management Dashboard",
@@ -13,11 +14,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="ar" dir="rtl" suppressHydrationWarning>
       <body className="min-h-screen bg-[#F4EFEA] text-[#18181B] antialiased selection:bg-amber-200">
-        <AuthProvider>
-          {children}
-        </AuthProvider>
+        <ThemeLanguageProvider>
+          <AuthProvider>
+            {children}
+          </AuthProvider>
+        </ThemeLanguageProvider>
       </body>
     </html>
   );

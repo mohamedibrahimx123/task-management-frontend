@@ -3,6 +3,7 @@
 import React from 'react';
 import { ChevronDownIcon, PencilIcon, ProjectPetalIcon } from './Icons';
 import { Task } from '@/lib/types';
+import { useThemeLang } from '@/context/ThemeLanguageContext';
 
 interface LeftColumnProps {
   tasks: Task[];
@@ -10,6 +11,8 @@ interface LeftColumnProps {
 }
 
 export function LeftColumn({ tasks, onOpenCreateTask }: LeftColumnProps) {
+  const { t } = useThemeLang();
+
   // Compute real productivity and task metrics from backend data
   const totalTasks = tasks.length;
   const completedTasks = tasks.filter((t) => t.status === 'completed').length;
@@ -21,7 +24,7 @@ export function LeftColumn({ tasks, onOpenCreateTask }: LeftColumnProps) {
 
   return (
     <div className="flex flex-col gap-6 w-full lg:w-72 shrink-0">
-      {/* 1. Project Selector Pill Card (Authentic Lisso Design) */}
+      {/* 1. Project Selector Pill Card */}
       <div className="bg-white/70 backdrop-blur-md rounded-[22px] p-3 border border-stone-200/50 shadow-sm flex items-center justify-between hover:bg-white/85 transition-colors cursor-pointer select-none">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-2xl bg-amber-100/80 flex items-center justify-center">
@@ -29,10 +32,10 @@ export function LeftColumn({ tasks, onOpenCreateTask }: LeftColumnProps) {
           </div>
           <div>
             <h4 className="text-sm font-semibold text-stone-900 leading-tight">
-              VinteX Project
+              {t('vintexProject')}
             </h4>
             <p className="text-xs text-stone-500">
-              Design &amp; Development
+              {t('designDevelopment')}
             </p>
           </div>
         </div>
@@ -45,7 +48,7 @@ export function LeftColumn({ tasks, onOpenCreateTask }: LeftColumnProps) {
           {calculatedProductivity}%
         </div>
         <p className="text-sm font-medium text-stone-600 mt-1">
-          Today&apos;s productivity
+          {t('todaysProductivity')}
         </p>
       </div>
 
@@ -54,10 +57,10 @@ export function LeftColumn({ tasks, onOpenCreateTask }: LeftColumnProps) {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h3 className="font-semibold text-sm text-stone-900 tracking-tight">
-            Project Activity
+            {t('projectActivity')}
           </h3>
           <span className="bg-[#647BF6] text-white text-[10px] font-semibold px-2.5 py-0.5 rounded-full shadow-sm">
-            Statistic
+            {t('statistic')}
           </span>
         </div>
 
@@ -68,7 +71,7 @@ export function LeftColumn({ tasks, onOpenCreateTask }: LeftColumnProps) {
               {totalTasks > 0 ? `${pendingTasks * 8 || 26}h` : '26h'}
             </div>
             <div className="text-[11px] font-medium text-stone-900/80 mt-0.5">
-              Sync Calls
+              {t('syncCalls')}
             </div>
           </div>
           <div>
@@ -76,7 +79,7 @@ export function LeftColumn({ tasks, onOpenCreateTask }: LeftColumnProps) {
               {totalTasks > 0 ? `${inProgressTasks * 4 || 11}h` : '11h'}
             </div>
             <div className="text-[11px] font-medium text-stone-900/80 mt-0.5">
-              Workshops
+              {t('workshops')}
             </div>
           </div>
           <div>
@@ -84,7 +87,7 @@ export function LeftColumn({ tasks, onOpenCreateTask }: LeftColumnProps) {
               {totalTasks > 0 ? `${completedTasks * 2 || 6}h` : '6h'}
             </div>
             <div className="text-[11px] font-medium text-stone-900/80 mt-0.5">
-              Reviews
+              {t('reviews')}
             </div>
           </div>
         </div>
@@ -94,7 +97,7 @@ export function LeftColumn({ tasks, onOpenCreateTask }: LeftColumnProps) {
           <button
             onClick={onOpenCreateTask}
             className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-stone-900 shadow-sm hover:scale-105 transition-transform active:scale-95"
-            title="Add or Edit Task"
+            title="Create Task"
           >
             <PencilIcon className="w-3.5 h-3.5" />
           </button>

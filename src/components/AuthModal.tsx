@@ -2,14 +2,17 @@
 
 import React, { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import { useThemeLang } from '@/context/ThemeLanguageContext';
 
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
+  isAdminOnly?: boolean;
 }
 
-export function AuthModal({ isOpen, onClose }: AuthModalProps) {
+export function AuthModal({ isOpen, onClose, isAdminOnly = false }: AuthModalProps) {
   const { login, register } = useAuth();
+  const { t, language } = useThemeLang();
   const [isRegister, setIsRegister] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -26,16 +29,16 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
     let res;
     if (isRegister) {
-      res = await register(name, email, password);
+      res = await register(name.trim(), email.trim(), password);
     } else {
-      res = await login(email, password);
+      res = await login(email.trim(), password);
     }
 
     setLoading(false);
     if (res.success) {
       onClose();
     } else {
-      setError(res.message || 'Authentication failed. Please verify credentials.');
+      setError(res.message || (language === 'ar' ? 'فشل تسجيل الدخول. تحقق من البيانات.' : 'Authentication failed. Please verify credentials.'));
     }
   };
 
@@ -60,12 +63,18 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-xl font-bold text-stone-900 tracking-tight">
-              {isRegister ? 'Create Account' : 'Sign In to Lisso'}
+              {isAdminOnly
+                ? t('signInAsAdmin')
+                : isRegister
+                ? t('createAccount')
+                : t('welcomeToLisso')}
             </h2>
             <p className="text-xs text-stone-500 mt-0.5">
-              {isRegister
-                ? 'Join the workspace team in seconds'
-                : 'Sign in to sync your tasks and workspace'}
+              {isAdminOnly
+                ? t('adminRestrictedNotice')
+                : isRegister
+                ? (language === 'ar' ? 'انضم إلى فريق العمل في ثوانٍ' : 'Join the workspace team in seconds')
+                : (language === 'ar' ? 'سجل الدخول لمزامنة مهامك ومساحة عملك' : 'Sign in to sync your tasks and workspace')}
             </p>
           </div>
           <button
@@ -82,46 +91,46 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
           </div>
         )}
 
-        {/* Quick Database Test Accounts */}
-        <div className="bg-stone-50 rounded-2xl p-3.5 border border-stone-100 flex flex-col gap-2">
+        {/* Quick Test Login Button:
+            - If on normal page: ONLY show regular user demo (user@example.com)
+            - If on admin page: ONLY show admin user demo (admin@example.com) */}
+        <div className="bg-stone-50 rounded-2xl p-3 border border-stone-100 flex flex-col gap-2">
           <span className="text-[10px] font-semibold text-stone-500 uppercase tracking-wider">
-            Quick 1-Click Database Login:
+            {language === 'ar' ? 'تسجيل دخول تجريبي فوري:' : 'Quick 1-Click Demo Login:'}
           </span>
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              disabled={loading}
-              onClick={() => handleQuickLogin('user@example.com')}
-              className="text-xs font-semibold px-3 py-2 rounded-xl bg-white border border-stone-200 text-stone-800 hover:bg-stone-100 transition-colors shadow-2xs text-center"
-            >
-              👤 Regular User
-            </button>
+          {isAdminOnly ? (
             <button
               type="button"
               disabled={loading}
               onClick={() => handleQuickLogin('admin@example.com')}
               className="text-xs font-semibold px-3 py-2 rounded-xl bg-stone-900 text-white hover:bg-stone-800 transition-colors shadow-2xs text-center"
             >
-              👑 Admin User
+              {t('adminUserLogin')} (admin@example.com)
             </button>
-          </div>
-          <p className="text-[10px] text-stone-400 text-center">
-            Password: <code className="text-stone-600">Password123!</code>
-          </p>
+          ) : (
+            <button
+              type="button"
+              disabled={loading}
+              onClick={() => handleQuickLogin('user@example.com')}
+              className="text-xs font-semibold px-3 py-2 rounded-xl bg-white border border-stone-200 text-stone-800 hover:bg-stone-100 transition-colors shadow-2xs text-center"
+            >
+              {t('demoUserLogin')} (user@example.com)
+            </button>
+          )}
         </div>
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          {isRegister && (
+          {!isAdminOnly && isRegister && (
             <div>
               <label className="block text-xs font-semibold text-stone-700 mb-1">
-                Full Name
+                {t('fullName')} *
               </label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Marco Lisso"
+                placeholder={language === 'ar' ? 'محمد إبراهيم' : 'Mohamed Ibrahim'}
                 required
                 className="w-full px-4 py-2.5 rounded-2xl bg-stone-50 border border-stone-200 focus:outline-none focus:ring-2 focus:ring-stone-900/10 text-stone-900 text-sm"
               />
@@ -130,13 +139,13 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
           <div>
             <label className="block text-xs font-semibold text-stone-700 mb-1">
-              Email
+              {t('email')} *
             </label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="user@example.com"
+              placeholder={isAdminOnly ? 'admin@example.com' : 'user@example.com'}
               required
               className="w-full px-4 py-2.5 rounded-2xl bg-stone-50 border border-stone-200 focus:outline-none focus:ring-2 focus:ring-stone-900/10 text-stone-900 text-sm"
             />
@@ -144,7 +153,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
           <div>
             <label className="block text-xs font-semibold text-stone-700 mb-1">
-              Password
+              {t('password')} *
             </label>
             <input
               type="password"
@@ -161,25 +170,31 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
             disabled={loading}
             className="w-full mt-2 py-3 rounded-full bg-stone-900 hover:bg-stone-800 disabled:opacity-50 text-white text-xs font-semibold transition-all shadow-md"
           >
-            {loading ? 'Please wait...' : isRegister ? 'Create Account' : 'Sign In'}
+            {loading
+              ? t('saving')
+              : isRegister
+              ? t('createAccount')
+              : t('signIn')}
           </button>
         </form>
 
-        {/* Toggle between Login and Register */}
-        <div className="text-center pt-2 border-t border-stone-100">
-          <button
-            type="button"
-            onClick={() => {
-              setIsRegister(!isRegister);
-              setError(null);
-            }}
-            className="text-xs text-stone-600 hover:text-stone-950 font-medium"
-          >
-            {isRegister
-              ? 'Already have an account? Sign In'
-              : "Don't have an account? Create one"}
-          </button>
-        </div>
+        {/* Toggle between Login and Register (Only for regular users) */}
+        {!isAdminOnly && (
+          <div className="text-center pt-2 border-t border-stone-100">
+            <button
+              type="button"
+              onClick={() => {
+                setIsRegister(!isRegister);
+                setError(null);
+              }}
+              className="text-xs text-stone-600 hover:text-stone-950 font-medium"
+            >
+              {isRegister
+                ? t('alreadyHaveAccount')
+                : t('dontHaveAccount')}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

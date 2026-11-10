@@ -13,6 +13,7 @@ import {
   TrashIcon,
   PencilIcon,
 } from './Icons';
+import { useThemeLang } from '@/context/ThemeLanguageContext';
 
 interface TaskStreamProps {
   tasks: Task[];
@@ -35,6 +36,7 @@ export function TaskStream({
   onDeleteTask,
   onToggleStatus,
 }: TaskStreamProps) {
+  const { t, language } = useThemeLang();
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -57,19 +59,19 @@ export function TaskStream({
         return (
           <span className="bg-[#F87154] text-white text-[11px] font-semibold px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-xs">
             <FlameIcon className="w-3 h-3 text-white" />
-            <span>High Priority</span>
+            <span>{t('highPriority')}</span>
           </span>
         );
       case 'medium':
         return (
           <span className="bg-amber-100 text-amber-800 text-[11px] font-semibold px-2.5 py-0.5 rounded-full">
-            Medium Priority
+            {t('mediumPriority')}
           </span>
         );
       case 'low':
         return (
           <span className="bg-stone-200 text-stone-700 text-[11px] font-semibold px-2.5 py-0.5 rounded-full">
-            Low Priority
+            {t('lowPriority')}
           </span>
         );
     }
@@ -80,20 +82,20 @@ export function TaskStream({
       case 'completed':
         return (
           <span className="bg-emerald-100 text-emerald-800 text-[11px] font-semibold px-2.5 py-0.5 rounded-full">
-            Completed
+            {t('completed')}
           </span>
         );
       case 'in_progress':
         return (
           <span className="bg-amber-100 text-amber-800 text-[11px] font-semibold px-2.5 py-0.5 rounded-full">
-            In Progress
+            {t('inProgress')}
           </span>
         );
       case 'pending':
       default:
         return (
           <span className="bg-stone-100 text-stone-700 text-[11px] font-semibold px-2.5 py-0.5 rounded-full">
-            To Do
+            {t('todo')}
           </span>
         );
     }
@@ -117,10 +119,10 @@ export function TaskStream({
       <div className="flex flex-wrap items-center justify-between gap-3 bg-white/60 backdrop-blur-md rounded-2xl p-2.5 border border-stone-200/40">
         <div className="flex items-center gap-1 bg-stone-100/80 rounded-xl p-1 text-xs font-semibold text-stone-600">
           {[
-            { id: 'all', label: 'All Tasks' },
-            { id: 'pending', label: 'To Do' },
-            { id: 'in_progress', label: 'In Progress' },
-            { id: 'completed', label: 'Completed' },
+            { id: 'all', label: t('all') },
+            { id: 'pending', label: t('todo') },
+            { id: 'in_progress', label: t('inProgress') },
+            { id: 'completed', label: t('completed') },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -142,7 +144,7 @@ export function TaskStream({
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search tasks..."
+            placeholder={t('searchTasks')}
             className="px-3 py-1 text-xs rounded-xl bg-white border border-stone-200 focus:outline-none focus:ring-1 focus:ring-stone-900/10 text-stone-800 placeholder:text-stone-400 w-36 sm:w-48"
           />
           <button
@@ -150,7 +152,7 @@ export function TaskStream({
             className="flex items-center gap-1 text-xs font-semibold px-3.5 py-1.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-white transition-all shadow-sm"
           >
             <PlusIcon className="w-3.5 h-3.5" />
-            <span>Add</span>
+            <span>{t('add')}</span>
           </button>
         </div>
       </div>
@@ -163,7 +165,7 @@ export function TaskStream({
             onClick={onRefresh}
             className="underline font-semibold hover:text-amber-950 shrink-0"
           >
-            Retry
+            {language === 'ar' ? 'إعادة المحاولة' : 'Retry'}
           </button>
         </div>
       )}
@@ -187,23 +189,23 @@ export function TaskStream({
             <TaskListIcon className="w-6 h-6" />
           </div>
           <h4 className="text-base font-bold text-stone-900">
-            No tasks found
+            {t('noTasksFound')}
           </h4>
           <p className="text-xs text-stone-500 max-w-xs">
             {searchQuery
-              ? 'No tasks match your search filter'
-              : 'You have no tasks in this view. Click Add to create one!'}
+              ? (language === 'ar' ? 'لا توجد مهام تطابق كلمة البحث' : 'No tasks match your search filter')
+              : (language === 'ar' ? 'ليس لديك أي مهام في هذا العرض. اضغط إضافة لإنشاء مهمة!' : 'You have no tasks in this view. Click Add to create one!')}
           </p>
           <button
             onClick={onOpenCreateTask}
             className="mt-2 text-xs font-semibold px-5 py-2 rounded-full bg-stone-900 text-white shadow-sm hover:bg-stone-800 transition-all"
           >
-            + Create Task
+            + {t('createTask')}
           </button>
         </div>
       )}
 
-      {/* Task Cards Stream (Styled identically to Lisso screenshot) */}
+      {/* Task Cards Stream */}
       <div className="flex flex-col gap-4">
         {filteredTasks.map((task, index) => {
           const isMeeting =
@@ -212,13 +214,13 @@ export function TaskStream({
             index === 0;
 
           const dateDisplay = task.dueDate
-            ? new Date(task.dueDate).toLocaleDateString('en-US', {
+            ? new Date(task.dueDate).toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-US', {
                 month: 'short',
                 day: 'numeric',
               })
             : isMeeting
-            ? 'Today, 10:00 AM'
-            : 'Mar 22';
+            ? (language === 'ar' ? 'اليوم، 10:00 ص' : 'Today, 10:00 AM')
+            : '22 مارس';
 
           return (
             <div
@@ -260,11 +262,11 @@ export function TaskStream({
 
                   {isMeeting ? (
                     <span className="bg-[#50BFA5] text-white text-[11px] font-semibold px-2.5 py-0.5 rounded-full shadow-xs">
-                      Meeting
+                      {language === 'ar' ? 'اجتماع' : 'Meeting'}
                     </span>
                   ) : (
                     <span className="bg-[#FDBA74] text-stone-900 text-[11px] font-semibold px-2.5 py-0.5 rounded-full shadow-xs">
-                      Task
+                      {language === 'ar' ? 'مهمة' : 'Task'}
                     </span>
                   )}
                 </div>
@@ -274,7 +276,7 @@ export function TaskStream({
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs border-t border-stone-100 pt-3">
                 <div>
                   <span className="text-stone-400 font-medium block">
-                    {isMeeting ? 'When:' : 'Topic:'}
+                    {isMeeting ? (language === 'ar' ? 'الموعد:' : 'When:') : (language === 'ar' ? 'الموضوع:' : 'Topic:')}
                   </span>
                   <span className="text-stone-800 font-semibold block mt-0.5 truncate">
                     {isMeeting ? dateDisplay : 'VinteX Website'}
@@ -283,7 +285,7 @@ export function TaskStream({
 
                 <div>
                   <span className="text-stone-400 font-medium block">
-                    {isMeeting ? 'Team:' : 'Description:'}
+                    {isMeeting ? (language === 'ar' ? 'الفريق:' : 'Team:') : (language === 'ar' ? 'الوصف:' : 'Description:')}
                   </span>
                   <span className="text-stone-800 font-medium block mt-0.5 truncate">
                     {task.description || (isMeeting ? 'Marketing & Growth' : 'Check the design of the main page')}
@@ -292,10 +294,10 @@ export function TaskStream({
 
                 <div>
                   <span className="text-stone-400 font-medium block">
-                    {isMeeting ? 'Reminder:' : 'Deadline:'}
+                    {isMeeting ? (language === 'ar' ? 'تذكير:' : 'Reminder:') : (language === 'ar' ? 'الموعد النهائي:' : 'Deadline:')}
                   </span>
                   <span className="text-stone-800 font-semibold block mt-0.5">
-                    {isMeeting ? '15 min' : dateDisplay}
+                    {isMeeting ? (language === 'ar' ? '15 دقيقة' : '15 min') : dateDisplay}
                   </span>
                 </div>
               </div>
@@ -304,7 +306,7 @@ export function TaskStream({
               <div className="flex items-center justify-between gap-3 pt-2">
                 {/* Performers Stack */}
                 <div className="flex items-center gap-2">
-                  <div className="flex -space-x-2 overflow-hidden">
+                  <div className="flex -space-x-2 rtl:space-x-reverse overflow-hidden">
                     <div className="inline-block h-6 w-6 rounded-full ring-2 ring-white bg-amber-400 text-stone-900 font-bold text-[10px] flex items-center justify-center">
                       M
                     </div>
@@ -316,13 +318,12 @@ export function TaskStream({
                     </div>
                   </div>
                   <span className="text-[11px] font-medium text-stone-500">
-                    {isMeeting ? '+7 Ready to join?' : 'Performers'}
+                    {isMeeting ? t('readyToJoin') : t('performers')}
                   </span>
                 </div>
 
                 {/* Right Action Buttons */}
                 <div className="flex items-center gap-2">
-                  {/* Status Toggle pill button */}
                   <button
                     onClick={() => onToggleStatus(task)}
                     className="px-3 py-1 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-800 text-xs font-semibold transition-colors"
@@ -333,14 +334,14 @@ export function TaskStream({
                   <button
                     onClick={() => onEditTask(task)}
                     className="p-1.5 rounded-full hover:bg-stone-100 text-stone-400 hover:text-stone-700 transition-colors"
-                    title="Edit Task"
+                    title={t('editTask')}
                   >
                     <PencilIcon className="w-3.5 h-3.5" />
                   </button>
                   <button
                     onClick={() => onDeleteTask(task.id)}
                     className="p-1.5 rounded-full hover:bg-rose-50 text-stone-400 hover:text-rose-600 transition-colors"
-                    title="Delete Task"
+                    title={t('delete')}
                   >
                     <TrashIcon className="w-3.5 h-3.5" />
                   </button>

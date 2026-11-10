@@ -39,21 +39,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           localStorage.setItem('lisso_user', JSON.stringify(res.data.user));
         }
       } else {
-        // Token might be expired or invalid
-        removeToken();
-        setUser(null);
-        setTokenState(null);
-      }
-    } catch {
-      // Offline fallback: try reading cached user
-      if (typeof window !== 'undefined') {
-        const cached = localStorage.getItem('lisso_user');
+        // Check local storage cached user if offline
+        const cached = typeof window !== 'undefined' ? localStorage.getItem('lisso_user') : null;
         if (cached) {
           try {
             setUser(JSON.parse(cached));
           } catch {
-            // ignore parse error
+            removeToken();
+            setUser(null);
+            setTokenState(null);
           }
+        } else {
+          removeToken();
+          setUser(null);
+          setTokenState(null);
+        }
+      }
+    } catch {
+      const cached = typeof window !== 'undefined' ? localStorage.getItem('lisso_user') : null;
+      if (cached) {
+        try {
+          setUser(JSON.parse(cached));
+        } catch {
+          // ignore
         }
       }
     } finally {

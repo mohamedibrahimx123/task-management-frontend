@@ -74,22 +74,37 @@ export async function request<T>(
       headers,
     });
 
-    const data = await response.json().catch(() => ({
-      success: false,
+    const rawData = await response.json().catch(() => ({
+      status: 'error',
       message: `HTTP Error ${response.status}: ${response.statusText}`,
     }));
 
-    if (!response.ok) {
+    const isSuccess =
+      response.ok &&
+      (rawData.success === true ||
+        rawData.status === 'success' ||
+        response.status < 400);
+
+    if (!isSuccess) {
       return {
         success: false,
-        message: data.message || data.error || `Error ${response.status}: ${response.statusText}`,
-        error: data.error,
+        message:
+          rawData.message ||
+          rawData.error ||
+          `Error ${response.status}: ${response.statusText}`,
+        error: rawData.error,
       };
     }
 
-    return data;
+    return {
+      success: true,
+      message: rawData.message,
+      data: rawData.data !== undefined ? (rawData.data as T) : (rawData as T),
+      pagination: rawData.pagination,
+    };
   } catch (err: unknown) {
-    const errorMessage = err instanceof Error ? err.message : 'Network request failed';
+    const errorMessage =
+      err instanceof Error ? err.message : 'Network request failed';
     return {
       success: false,
       message: `${errorMessage}. Make sure the backend server is running and accessible at ${baseUrl}`,
@@ -101,24 +116,66 @@ export async function request<T>(
 // Auth API & Task API & Admin API
 export const api = {
   auth: {
-    async register(name: string, email: string, password: string): Promise<ApiResponse<{ user: User; token: string }>> {
-      return request<{ user: User; token: string }>('/auth/register', {
+    async register(
+      name: string,
+      email: string,
+      password: string
+    ): Promise<ApiResponse<{ user: User; token: string }>> {
+      // 1. Call register endpoint
+      const registerRes = await request<any>('/auth/register', {
         method: 'POST',
         body: JSON.stringify({ name, email, password }),
       });
+
+      if (!registerRes.success) {
+        return {
+          success: false,
+          message: registerRes.message || 'Registration failed',
+        };
+      }
+
+      // 2. Automatically log in to obtain JWT access token
+      return api.auth.login(email, password);
     },
 
-    async login(email: string, password: string): Promise<ApiResponse<{ user: User; token: string }>> {
-      return request<{ user: User; token: string }>('/auth/login', {
+    async login(
+      email: string,
+      password: string
+    ): Promise<ApiResponse<{ user: User; token: string }>> {
+      const res = await request<any>('/auth/login', {
         method: 'POST',
         body: JSON.stringify({ email, password }),
       });
+
+      if (res.success && res.data) {
+        const token =
+          res.data.accessToken || res.data.token || res.data?.data?.accessToken;
+        const user = res.data.user || res.data?.data?.user;
+
+        if (token && user) {
+          return {
+            success: true,
+            data: { user, token },
+            message: res.message || 'Login successful',
+          };
+        }
+      }
+
+      return {
+        success: false,
+        message: res.message || 'Invalid credentials or missing token',
+      };
     },
 
     async getMe(): Promise<ApiResponse<{ user: User }>> {
-      return request<{ user: User }>('/users/me', {
+      const res = await request<any>('/users/me', {
         method: 'GET',
       });
+      if (res.success && res.data) {
+        const user = res.data.user || res.data;
+        return { success: true, data: { user } };
+      }
+      return { success: false, message: res.message };
     },
   },
 
@@ -142,24 +199,21 @@ export const api = {
       if (params?.sortOrder) searchParams.set('sortOrder', params.sortOrder);
 
       const query = searchParams.toString();
-      const res = await request<{ tasks: Task[]; pagination: PaginationMeta } | Task[]>(
-        `/tasks${query ? `?${query}` : ''}`,
-        { method: 'GET' }
-      );
+      const res = await request<any>(`/tasks${query ? `?${query}` : ''}`, {
+        method: 'GET',
+      });
 
-      // Handle both formats { success: true, data: { tasks: [...], pagination: {...} } } or { success: true, data: [...] }
       if (res.success && res.data) {
-        if ('tasks' in res.data) {
-          return {
-            success: true,
-            data: res.data.tasks,
-            pagination: res.data.pagination,
-          };
-        }
+        const tasks = Array.isArray(res.data)
+          ? res.data
+          : Array.isArray(res.data.tasks)
+          ? res.data.tasks
+          : [];
+
         return {
           success: true,
-          data: res.data as Task[],
-          pagination: res.pagination,
+          data: tasks,
+          pagination: res.pagination || res.data?.pagination,
         };
       }
       return {
@@ -170,23 +224,38 @@ export const api = {
     },
 
     async getById(id: string): Promise<ApiResponse<Task>> {
-      return request<Task>(`/tasks/${id}`, {
+      const res = await request<any>(`/tasks/${id}`, {
         method: 'GET',
       });
+      if (res.success && res.data) {
+        const task = res.data.task || res.data;
+        return { success: true, data: task };
+      }
+      return { success: false, message: res.message };
     },
 
     async create(input: CreateTaskInput): Promise<ApiResponse<Task>> {
-      return request<Task>('/tasks', {
+      const res = await request<any>('/tasks', {
         method: 'POST',
         body: JSON.stringify(input),
       });
+      if (res.success && res.data) {
+        const task = res.data.task || res.data;
+        return { success: true, data: task };
+      }
+      return { success: false, message: res.message };
     },
 
     async update(id: string, input: UpdateTaskInput): Promise<ApiResponse<Task>> {
-      return request<Task>(`/tasks/${id}`, {
+      const res = await request<any>(`/tasks/${id}`, {
         method: 'PUT',
         body: JSON.stringify(input),
       });
+      if (res.success && res.data) {
+        const task = res.data.task || res.data;
+        return { success: true, data: task };
+      }
+      return { success: false, message: res.message };
     },
 
     async delete(id: string): Promise<ApiResponse<{ message: string }>> {
@@ -209,7 +278,10 @@ export const api = {
       });
     },
 
-    async updateRole(userId: string, role: 'user' | 'admin'): Promise<ApiResponse<AdminUser>> {
+    async updateRole(
+      userId: string,
+      role: 'user' | 'admin'
+    ): Promise<ApiResponse<AdminUser>> {
       return request<AdminUser>(`/admin/users/${userId}/role`, {
         method: 'PUT',
         body: JSON.stringify({ role }),

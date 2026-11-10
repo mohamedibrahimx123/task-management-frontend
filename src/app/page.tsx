@@ -8,6 +8,7 @@ import { RightColumn } from '@/components/RightColumn';
 import { TaskModal } from '@/components/TaskModal';
 import { AuthModal } from '@/components/AuthModal';
 import { useAuth } from '@/context/AuthContext';
+import { useThemeLang } from '@/context/ThemeLanguageContext';
 import { api } from '@/lib/api';
 import { CreateTaskInput, Task } from '@/lib/types';
 
@@ -47,6 +48,7 @@ const DEFAULT_TASKS: Task[] = [
 
 export default function DashboardPage() {
   const { user } = useAuth();
+  const { t, language } = useThemeLang();
   const [tasks, setTasks] = useState<Task[]>(DEFAULT_TASKS);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -169,7 +171,7 @@ export default function DashboardPage() {
     setIsTaskModalOpen(true);
   };
 
-  const displayName = user?.name ? user.name.split(' ')[0] : 'Marco';
+  const displayName = user?.name ? user.name.split(' ')[0] : (language === 'ar' ? 'ماركو' : 'Marco');
 
   return (
     <div className="min-h-screen flex flex-col pb-16">
@@ -181,39 +183,39 @@ export default function DashboardPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-2">
           {/* Left: User Avatar + Greeting */}
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full ring-2 ring-stone-900/10 overflow-hidden bg-gradient-to-tr from-amber-400 to-rose-400 p-0.5 shadow-sm">
+            <div className="w-12 h-12 rounded-full ring-2 ring-stone-900/10 dark:ring-stone-100/10 overflow-hidden bg-gradient-to-tr from-amber-400 to-rose-400 p-0.5 shadow-sm">
               <div className="w-full h-full rounded-full bg-stone-900 text-amber-200 font-bold flex items-center justify-center text-base">
                 {displayName.charAt(0)}
               </div>
             </div>
             <div>
-              <h1 className="text-3xl font-extrabold text-stone-900 tracking-tight font-sans">
-                Hi, {displayName}!
+              <h1 className="text-3xl font-extrabold text-stone-900 dark:text-stone-100 tracking-tight font-sans">
+                {t('hi')}, {displayName}!
               </h1>
             </div>
           </div>
 
           {/* Center: Page Title */}
           <div className="text-center">
-            <h2 className="text-xl font-bold text-stone-800 tracking-tight">
-              Today&apos;s Tasks
+            <h2 className="text-xl font-bold text-stone-800 dark:text-stone-200 tracking-tight">
+              {t('todaysTasks')}
             </h2>
           </div>
 
           {/* Right: Team Stack (Authentic Lisso Design) */}
           <div className="flex items-center gap-2 self-start sm:self-center">
-            <span className="text-xs font-semibold text-stone-500">Team:</span>
-            <div className="flex -space-x-2 overflow-hidden">
-              <div className="inline-block h-7 w-7 rounded-full ring-2 ring-[#F4EFEA] bg-rose-400 text-white font-bold text-xs flex items-center justify-center">
+            <span className="text-xs font-semibold text-stone-500 dark:text-stone-400">{t('team')}:</span>
+            <div className="flex -space-x-2 overflow-hidden rtl:space-x-reverse">
+              <div className="inline-block h-7 w-7 rounded-full ring-2 ring-[#F4EFEA] dark:ring-stone-800 bg-rose-400 text-white font-bold text-xs flex items-center justify-center">
                 S
               </div>
-              <div className="inline-block h-7 w-7 rounded-full ring-2 ring-[#F4EFEA] bg-amber-400 text-stone-900 font-bold text-xs flex items-center justify-center">
+              <div className="inline-block h-7 w-7 rounded-full ring-2 ring-[#F4EFEA] dark:ring-stone-800 bg-amber-400 text-stone-900 font-bold text-xs flex items-center justify-center">
                 A
               </div>
-              <div className="inline-block h-7 w-7 rounded-full ring-2 ring-[#F4EFEA] bg-sky-400 text-white font-bold text-xs flex items-center justify-center">
+              <div className="inline-block h-7 w-7 rounded-full ring-2 ring-[#F4EFEA] dark:ring-stone-800 bg-sky-400 text-white font-bold text-xs flex items-center justify-center">
                 R
               </div>
-              <div className="inline-block h-7 w-7 rounded-full ring-2 ring-[#F4EFEA] bg-stone-900 text-stone-200 font-bold text-[10px] flex items-center justify-center">
+              <div className="inline-block h-7 w-7 rounded-full ring-2 ring-[#F4EFEA] dark:ring-stone-800 bg-stone-900 text-stone-200 font-bold text-[10px] flex items-center justify-center">
                 +9
               </div>
             </div>
@@ -257,6 +259,7 @@ export default function DashboardPage() {
       {/* Authentication Modal */}
       <AuthModal
         isOpen={isAuthModalOpen}
+        isAdminOnly={false}
         onClose={() => {
           setIsAuthModalOpen(false);
           loadTasks();

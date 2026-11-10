@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { CreateTaskInput, Task, TaskPriority, TaskStatus } from '@/lib/types';
+import { useThemeLang } from '@/context/ThemeLanguageContext';
 
 interface TaskModalProps {
   isOpen: boolean;
@@ -20,6 +21,7 @@ export function TaskModal({
   defaultTitle = '',
   defaultDescription = '',
 }: TaskModalProps) {
+  const { t, language } = useThemeLang();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState<TaskPriority>('medium');
@@ -52,7 +54,7 @@ export function TaskModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) {
-      setError('Title is required');
+      setError(language === 'ar' ? 'عنوان المهمة مطلوب' : 'Title is required');
       return;
     }
 
@@ -71,7 +73,7 @@ export function TaskModal({
     if (success) {
       onClose();
     } else {
-      setError('Failed to save task. Please ensure you are logged in.');
+      setError(language === 'ar' ? 'فشل حفظ المهمة. تأكد من تسجيل الدخول.' : 'Failed to save task. Please ensure you are logged in.');
     }
   };
 
@@ -81,7 +83,7 @@ export function TaskModal({
         {/* Header */}
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-bold text-stone-900 tracking-tight">
-            {editingTask ? 'Edit Task' : 'Create New Task'}
+            {editingTask ? t('editTask') : t('createTask')}
           </h2>
           <button
             onClick={onClose}
@@ -101,13 +103,13 @@ export function TaskModal({
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div>
             <label className="block text-xs font-semibold text-stone-700 mb-1">
-              Title *
+              {t('title')} *
             </label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g. Design Review & Alignment"
+              placeholder={language === 'ar' ? 'مثال: مراجعة التصميم والألوان' : 'e.g. Design Review & Alignment'}
               required
               className="w-full px-4 py-2.5 rounded-2xl bg-stone-50 border border-stone-200 focus:outline-none focus:ring-2 focus:ring-stone-900/10 text-stone-900 text-sm placeholder:text-stone-400"
             />
@@ -115,12 +117,12 @@ export function TaskModal({
 
           <div>
             <label className="block text-xs font-semibold text-stone-700 mb-1">
-              Description
+              {t('description')}
             </label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Provide context, deliverables, or checklist..."
+              placeholder={language === 'ar' ? 'أضف تفاصيل المهمة أو متطلباتها...' : 'Provide context, deliverables, or checklist...'}
               rows={3}
               className="w-full px-4 py-2.5 rounded-2xl bg-stone-50 border border-stone-200 focus:outline-none focus:ring-2 focus:ring-stone-900/10 text-stone-900 text-sm placeholder:text-stone-400 resize-none"
             />
@@ -129,38 +131,38 @@ export function TaskModal({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-semibold text-stone-700 mb-1">
-                Priority
+                {t('priority')}
               </label>
               <select
                 value={priority}
                 onChange={(e) => setPriority(e.target.value as TaskPriority)}
                 className="w-full px-3 py-2.5 rounded-2xl bg-stone-50 border border-stone-200 focus:outline-none focus:ring-2 focus:ring-stone-900/10 text-stone-900 text-xs font-medium"
               >
-                <option value="low">Low Priority</option>
-                <option value="medium">Medium Priority</option>
-                <option value="high">High Priority (🔥)</option>
+                <option value="low">{t('lowPriority')}</option>
+                <option value="medium">{t('mediumPriority')}</option>
+                <option value="high">{t('highPriority')} (🔥)</option>
               </select>
             </div>
 
             <div>
               <label className="block text-xs font-semibold text-stone-700 mb-1">
-                Status
+                {t('status')}
               </label>
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value as TaskStatus)}
                 className="w-full px-3 py-2.5 rounded-2xl bg-stone-50 border border-stone-200 focus:outline-none focus:ring-2 focus:ring-stone-900/10 text-stone-900 text-xs font-medium"
               >
-                <option value="pending">To Do (Pending)</option>
-                <option value="in_progress">In Progress</option>
-                <option value="completed">Completed</option>
+                <option value="pending">{t('todo')}</option>
+                <option value="in_progress">{t('inProgress')}</option>
+                <option value="completed">{t('completed')}</option>
               </select>
             </div>
           </div>
 
           <div>
             <label className="block text-xs font-semibold text-stone-700 mb-1">
-              Due Date
+              {t('dueDate')}
             </label>
             <input
               type="date"
@@ -177,14 +179,14 @@ export function TaskModal({
               onClick={onClose}
               className="px-5 py-2.5 rounded-full border border-stone-200 text-stone-700 hover:bg-stone-50 text-xs font-semibold transition-colors"
             >
-              Cancel
+              {t('cancel')}
             </button>
             <button
               type="submit"
               disabled={loading}
               className="px-6 py-2.5 rounded-full bg-stone-900 hover:bg-stone-800 disabled:opacity-50 text-white text-xs font-semibold transition-all shadow-md"
             >
-              {loading ? 'Saving...' : editingTask ? 'Update Task' : 'Create Task'}
+              {loading ? t('saving') : editingTask ? t('save') : t('createTask')}
             </button>
           </div>
         </form>

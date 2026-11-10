@@ -5,6 +5,7 @@ import { Header } from '@/components/Header';
 import { TaskModal } from '@/components/TaskModal';
 import { AuthModal } from '@/components/AuthModal';
 import { useAuth } from '@/context/AuthContext';
+import { useThemeLang } from '@/context/ThemeLanguageContext';
 import { api } from '@/lib/api';
 import { CreateTaskInput, Task, TaskPriority, TaskStatus } from '@/lib/types';
 import {
@@ -19,6 +20,7 @@ import {
 
 export default function TasksPage() {
   const { user } = useAuth();
+  const { t, language } = useThemeLang();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -37,7 +39,11 @@ export default function TasksPage() {
 
   const loadTasks = useCallback(async () => {
     if (!user) {
-      setError('Please sign in to view and manage your tasks.');
+      setError(
+        language === 'ar'
+          ? 'يرجى تسجيل الدخول لعرض وإدارة مهامك.'
+          : 'Please sign in to view and manage your tasks.'
+      );
       return;
     }
 
@@ -56,14 +62,18 @@ export default function TasksPage() {
       if (res.success && res.data) {
         setTasks(res.data);
       } else {
-        setError(res.message || 'Failed to fetch tasks.');
+        setError(res.message || (language === 'ar' ? 'فشل تحميل المهام.' : 'Failed to fetch tasks.'));
       }
     } catch {
-      setError('Could not connect to backend server.');
+      setError(
+        language === 'ar'
+          ? 'تعذر الاتصال بخادم الـ Backend.'
+          : 'Could not connect to backend server.'
+      );
     } finally {
       setLoading(false);
     }
-  }, [user, filterStatus, filterPriority, searchQuery, sortBy, sortOrder]);
+  }, [user, filterStatus, filterPriority, searchQuery, sortBy, sortOrder, language]);
 
   useEffect(() => {
     loadTasks();
@@ -101,12 +111,17 @@ export default function TasksPage() {
       return;
     }
 
-    if (confirm('Are you sure you want to delete this task?')) {
+    const confirmMsg =
+      language === 'ar'
+        ? 'هل أنت متأكد من رغبتك في حذف هذه المهمة؟'
+        : 'Are you sure you want to delete this task?';
+
+    if (confirm(confirmMsg)) {
       const res = await api.tasks.delete(id);
       if (res.success) {
         await loadTasks();
       } else {
-        alert(res.message || 'Failed to delete task.');
+        alert(res.message || (language === 'ar' ? 'فشل حذف المهمة' : 'Failed to delete task.'));
       }
     }
   };
@@ -134,45 +149,21 @@ export default function TasksPage() {
     switch (priority) {
       case 'high':
         return (
-          <span className="bg-[#F87154] text-white text-[11px] font-semibold px-2.5 py-0.5 rounded-full inline-flex items-center gap-1">
+          <span className="bg-[#F87154] text-white text-[11px] font-semibold px-2.5 py-0.5 rounded-full inline-flex items-center gap-1 shadow-xs">
             <FlameIcon className="w-3 h-3 text-white" />
-            <span>High</span>
+            <span>{t('high')}</span>
           </span>
         );
       case 'medium':
         return (
-          <span className="bg-amber-100 text-amber-800 text-[11px] font-semibold px-2.5 py-0.5 rounded-full">
-            Medium
+          <span className="bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300 text-[11px] font-semibold px-2.5 py-0.5 rounded-full">
+            {t('medium')}
           </span>
         );
       case 'low':
         return (
-          <span className="bg-stone-200 text-stone-700 text-[11px] font-semibold px-2.5 py-0.5 rounded-full">
-            Low
-          </span>
-        );
-    }
-  };
-
-  const getStatusBadge = (status: TaskStatus) => {
-    switch (status) {
-      case 'completed':
-        return (
-          <span className="bg-emerald-100 text-emerald-800 text-[11px] font-semibold px-2.5 py-0.5 rounded-full">
-            Completed
-          </span>
-        );
-      case 'in_progress':
-        return (
-          <span className="bg-amber-100 text-amber-800 text-[11px] font-semibold px-2.5 py-0.5 rounded-full">
-            In Progress
-          </span>
-        );
-      case 'pending':
-      default:
-        return (
-          <span className="bg-stone-100 text-stone-700 text-[11px] font-semibold px-2.5 py-0.5 rounded-full">
-            Pending
+          <span className="bg-stone-200 dark:bg-stone-700 text-stone-700 dark:text-stone-300 text-[11px] font-semibold px-2.5 py-0.5 rounded-full">
+            {t('low')}
           </span>
         );
     }
@@ -181,12 +172,14 @@ export default function TasksPage() {
   const getStatusIcon = (status: TaskStatus) => {
     switch (status) {
       case 'completed':
-        return <CheckCircleIcon className="w-5 h-5 text-emerald-600" />;
+        return <CheckCircleIcon className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />;
       case 'in_progress':
         return <ClockIcon className="w-5 h-5 text-amber-500" />;
       case 'pending':
       default:
-        return <CircleIcon className="w-5 h-5 text-stone-400 hover:text-stone-700" />;
+        return (
+          <CircleIcon className="w-5 h-5 text-stone-400 dark:text-stone-500 hover:text-stone-700 dark:hover:text-stone-200" />
+        );
     }
   };
 
@@ -198,11 +191,11 @@ export default function TasksPage() {
         {/* Top Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-extrabold text-stone-900 tracking-tight">
-              Tasks
+            <h1 className="text-3xl font-extrabold text-stone-900 dark:text-stone-100 tracking-tight">
+              {t('tasks')}
             </h1>
-            <p className="text-xs text-stone-500 mt-1">
-              Manage, filter, and track all your tasks and deadlines
+            <p className="text-xs text-stone-500 dark:text-stone-400 mt-1">
+              {t('tasksSubtitle')}
             </p>
           </div>
 
@@ -215,30 +208,30 @@ export default function TasksPage() {
               setEditingTask(null);
               setIsTaskModalOpen(true);
             }}
-            className="flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-stone-900 hover:bg-stone-800 text-white text-xs font-semibold shadow-md transition-all self-start sm:self-auto"
+            className="flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-stone-900 hover:bg-stone-800 dark:bg-stone-100 dark:hover:bg-white dark:text-stone-950 text-white text-xs font-semibold shadow-md transition-all self-start sm:self-auto cursor-pointer"
           >
             <PlusIcon className="w-4 h-4" />
-            <span>Create Task</span>
+            <span>{t('createTask')}</span>
           </button>
         </div>
 
         {/* Filter Controls Bar */}
-        <div className="bg-white/80 backdrop-blur-md rounded-[24px] p-4 border border-stone-200/50 shadow-sm flex flex-wrap items-center justify-between gap-4">
+        <div className="bg-white/80 dark:bg-stone-900/80 backdrop-blur-md rounded-[24px] p-4 border border-stone-200/50 dark:border-stone-800 shadow-sm flex flex-wrap items-center justify-between gap-4">
           {/* Status Tabs */}
-          <div className="flex items-center gap-1 bg-stone-100/80 rounded-xl p-1 text-xs font-semibold text-stone-600">
+          <div className="flex items-center gap-1 bg-stone-100/80 dark:bg-stone-800 rounded-xl p-1 text-xs font-semibold text-stone-600 dark:text-stone-300">
             {[
-              { id: 'all', label: 'All' },
-              { id: 'pending', label: 'To Do' },
-              { id: 'in_progress', label: 'In Progress' },
-              { id: 'completed', label: 'Completed' },
+              { id: 'all', label: t('all') },
+              { id: 'pending', label: t('todo') },
+              { id: 'in_progress', label: t('inProgress') },
+              { id: 'completed', label: t('completed') },
             ].map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setFilterStatus(tab.id)}
-                className={`px-3 py-1.5 rounded-lg transition-all ${
+                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
                   filterStatus === tab.id
-                    ? 'bg-white text-stone-900 shadow-xs'
-                    : 'hover:text-stone-900'
+                    ? 'bg-white dark:bg-stone-700 text-stone-900 dark:text-white shadow-xs font-bold'
+                    : 'hover:text-stone-900 dark:hover:text-white'
                 }`}
               >
                 {tab.label}
@@ -252,12 +245,12 @@ export default function TasksPage() {
             <select
               value={filterPriority}
               onChange={(e) => setFilterPriority(e.target.value)}
-              className="text-xs px-3 py-2 rounded-xl bg-white border border-stone-200 text-stone-700 font-medium focus:outline-none"
+              className="text-xs px-3 py-2 rounded-xl bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 text-stone-700 dark:text-stone-200 font-medium focus:outline-none"
             >
-              <option value="all">All Priorities</option>
-              <option value="high">High Priority (🔥)</option>
-              <option value="medium">Medium Priority</option>
-              <option value="low">Low Priority</option>
+              <option value="all">{t('allPriorities')}</option>
+              <option value="high">{t('highPriority')} (🔥)</option>
+              <option value="medium">{t('mediumPriority')}</option>
+              <option value="low">{t('lowPriority')}</option>
             </select>
 
             {/* Sort Options */}
@@ -268,12 +261,12 @@ export default function TasksPage() {
                 setSortBy(sb as 'createdAt' | 'dueDate' | 'priority');
                 setSortOrder(so as 'asc' | 'desc');
               }}
-              className="text-xs px-3 py-2 rounded-xl bg-white border border-stone-200 text-stone-700 font-medium focus:outline-none"
+              className="text-xs px-3 py-2 rounded-xl bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 text-stone-700 dark:text-stone-200 font-medium focus:outline-none"
             >
-              <option value="createdAt-desc">Newest First</option>
-              <option value="createdAt-asc">Oldest First</option>
-              <option value="dueDate-asc">Due Date (Earliest)</option>
-              <option value="priority-desc">Priority (High to Low)</option>
+              <option value="createdAt-desc">{t('newestFirst')}</option>
+              <option value="createdAt-asc">{t('oldestFirst')}</option>
+              <option value="dueDate-asc">{t('dueDateEarliest')}</option>
+              <option value="priority-desc">{t('priorityHighToLow')}</option>
             </select>
 
             {/* Search Input */}
@@ -281,58 +274,64 @@ export default function TasksPage() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by title..."
-              className="px-3.5 py-2 text-xs rounded-xl bg-white border border-stone-200 focus:outline-none focus:ring-1 focus:ring-stone-900/10 text-stone-800 placeholder:text-stone-400 w-44"
+              placeholder={t('searchByTitle')}
+              className="px-3.5 py-2 text-xs rounded-xl bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 focus:outline-none focus:ring-1 focus:ring-stone-900/10 dark:focus:ring-stone-100/20 text-stone-800 dark:text-stone-100 placeholder:text-stone-400 w-44"
             />
           </div>
         </div>
 
         {/* Error Notice */}
         {error && (
-          <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200/80 text-amber-900 text-xs flex items-center justify-between gap-3">
+          <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-800 text-amber-900 dark:text-amber-200 text-xs flex items-center justify-between gap-3">
             <span>{error}</span>
             <button
               onClick={loadTasks}
-              className="underline font-semibold hover:text-amber-950 shrink-0"
+              className="underline font-semibold hover:text-amber-950 dark:hover:text-amber-100 shrink-0 cursor-pointer"
             >
-              Retry
+              {t('retry')}
             </button>
           </div>
         )}
 
         {/* Tasks Table / List */}
-        <div className="bg-white/90 backdrop-blur-md rounded-[28px] border border-white/70 shadow-sm overflow-hidden">
+        <div className="bg-white/90 dark:bg-stone-900/90 backdrop-blur-md rounded-[28px] border border-white/70 dark:border-stone-800 shadow-sm overflow-hidden">
           {loading ? (
-            <div className="p-12 text-center text-xs text-stone-500 animate-pulse">
-              Loading tasks...
+            <div className="p-12 text-center text-xs text-stone-500 dark:text-stone-400 animate-pulse">
+              {t('loadingTasks')}
             </div>
           ) : tasks.length === 0 ? (
             <div className="p-16 text-center flex flex-col items-center justify-center gap-3">
-              <p className="text-sm font-bold text-stone-800">No tasks found</p>
-              <p className="text-xs text-stone-500">
+              <p className="text-sm font-bold text-stone-800 dark:text-stone-200">
+                {t('noTasksFound')}
+              </p>
+              <p className="text-xs text-stone-500 dark:text-stone-400">
                 {user
-                  ? 'Create your first task or change your filter criteria'
-                  : 'Sign in to sync your tasks'}
+                  ? (language === 'ar'
+                      ? 'أنشئ أول مهمة لك أو قم بتغيير معايير التصفية'
+                      : 'Create your first task or change your filter criteria')
+                  : (language === 'ar'
+                      ? 'سجل الدخول لمزامنة مهامك'
+                      : 'Sign in to sync your tasks')}
               </p>
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
+              <table className="w-full text-left rtl:text-right text-xs">
                 <thead>
-                  <tr className="border-b border-stone-100 bg-stone-50/70 text-stone-500 font-semibold uppercase tracking-wider text-[10px]">
-                    <th className="py-3.5 px-6">Status</th>
-                    <th className="py-3.5 px-6">Task Title &amp; Description</th>
-                    <th className="py-3.5 px-6">Priority</th>
-                    <th className="py-3.5 px-6">Due Date</th>
-                    <th className="py-3.5 px-6">Created</th>
-                    <th className="py-3.5 px-6 text-right">Actions</th>
+                  <tr className="border-b border-stone-100 dark:border-stone-800 bg-stone-50/70 dark:bg-stone-800/70 text-stone-500 dark:text-stone-400 font-semibold uppercase tracking-wider text-[10px]">
+                    <th className="py-3.5 px-6">{t('status')}</th>
+                    <th className="py-3.5 px-6">{t('taskTitleDescription')}</th>
+                    <th className="py-3.5 px-6">{t('priority')}</th>
+                    <th className="py-3.5 px-6">{t('dueDate')}</th>
+                    <th className="py-3.5 px-6">{t('created')}</th>
+                    <th className="py-3.5 px-6 text-right rtl:text-left">{t('actions')}</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-stone-100">
+                <tbody className="divide-y divide-stone-100 dark:divide-stone-800">
                   {tasks.map((task) => (
                     <tr
                       key={task.id}
-                      className="hover:bg-stone-50/70 transition-colors group"
+                      className="hover:bg-stone-50/70 dark:hover:bg-stone-800/50 transition-colors group"
                     >
                       {/* Status Icon */}
                       <td className="py-4 px-6 whitespace-nowrap">
@@ -348,14 +347,16 @@ export default function TasksPage() {
                       {/* Title & Description */}
                       <td className="py-4 px-6 max-w-sm">
                         <p
-                          className={`font-bold text-stone-900 ${
-                            task.status === 'completed' ? 'line-through text-stone-400' : ''
+                          className={`font-bold text-stone-900 dark:text-stone-100 ${
+                            task.status === 'completed'
+                              ? 'line-through text-stone-400 dark:text-stone-500'
+                              : ''
                           }`}
                         >
                           {task.title}
                         </p>
                         {task.description && (
-                          <p className="text-[11px] text-stone-500 line-clamp-1 mt-0.5">
+                          <p className="text-[11px] text-stone-500 dark:text-stone-400 line-clamp-1 mt-0.5">
                             {task.description}
                           </p>
                         )}
@@ -367,38 +368,43 @@ export default function TasksPage() {
                       </td>
 
                       {/* Due Date */}
-                      <td className="py-4 px-6 whitespace-nowrap text-stone-700 font-medium">
+                      <td className="py-4 px-6 whitespace-nowrap text-stone-700 dark:text-stone-300 font-medium">
                         {task.dueDate
-                          ? new Date(task.dueDate).toLocaleDateString('en-US', {
-                              month: 'short',
-                              day: 'numeric',
-                              year: 'numeric',
-                            })
+                          ? new Date(task.dueDate).toLocaleDateString(
+                              language === 'ar' ? 'ar-EG' : 'en-US',
+                              {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric',
+                              }
+                            )
                           : '—'}
                       </td>
 
                       {/* Created At */}
-                      <td className="py-4 px-6 whitespace-nowrap text-stone-400">
-                        {new Date(task.createdAt).toLocaleDateString()}
+                      <td className="py-4 px-6 whitespace-nowrap text-stone-400 dark:text-stone-500">
+                        {new Date(task.createdAt).toLocaleDateString(
+                          language === 'ar' ? 'ar-EG' : 'en-US'
+                        )}
                       </td>
 
                       {/* Actions */}
-                      <td className="py-4 px-6 whitespace-nowrap text-right">
-                        <div className="flex items-center justify-end gap-2">
+                      <td className="py-4 px-6 whitespace-nowrap text-right rtl:text-left">
+                        <div className="flex items-center justify-end rtl:justify-start gap-2">
                           <button
                             onClick={() => {
                               setEditingTask(task);
                               setIsTaskModalOpen(true);
                             }}
-                            className="p-1.5 rounded-full hover:bg-stone-100 text-stone-400 hover:text-stone-700 transition-colors"
-                            title="Edit Task"
+                            className="p-1.5 rounded-full hover:bg-stone-100 dark:hover:bg-stone-800 text-stone-400 dark:text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 transition-colors cursor-pointer"
+                            title={t('editTask')}
                           >
                             <PencilIcon className="w-3.5 h-3.5" />
                           </button>
                           <button
                             onClick={() => handleDeleteTask(task.id)}
-                            className="p-1.5 rounded-full hover:bg-rose-50 text-stone-400 hover:text-rose-600 transition-colors"
-                            title="Delete Task"
+                            className="p-1.5 rounded-full hover:bg-rose-50 dark:hover:bg-rose-950/40 text-stone-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors cursor-pointer"
+                            title={t('delete')}
                           >
                             <TrashIcon className="w-3.5 h-3.5" />
                           </button>
@@ -424,6 +430,7 @@ export default function TasksPage() {
       {/* Auth Modal */}
       <AuthModal
         isOpen={isAuthModalOpen}
+        isAdminOnly={false}
         onClose={() => {
           setIsAuthModalOpen(false);
           loadTasks();
